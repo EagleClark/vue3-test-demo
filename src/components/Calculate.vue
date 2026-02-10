@@ -25,7 +25,7 @@ const onInputChange = (val: string) => {
       :parser="(value: string) => value.replace(/\￥\s?|(,*)/g, '')"
       @change="onInputChange"
     >
-      <template #prepend>输入年收入计算个税</template>
+      <template #prepend>输入月收入计算个税</template>
     </el-input>
     <p>个税（￥）：{{ tax }}</p>
   </div>

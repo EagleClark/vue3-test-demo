@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`UserCard.vue > 快照应该匹配 1`] = `"<p style="color: gray;" class="status">离线: <span class="name">SnapshotUser</span></p>"`;

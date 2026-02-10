@@ -1,18 +1,18 @@
 <script setup lang="ts">
+import UserCard from './UserCard.vue'
 </script>
 
 <template>
-  <div class="home">Home</div>
+  <div class="home">
+    <UserCard name="张三" status="online"></UserCard>
+    <UserCard name="李四" status="offline"></UserCard>
+    <UserCard name="王麻子" status="busy"></UserCard>
+  </div>
 </template>
 
 <style scoped>
 .home {
   width: 100vw;
-  height: calc(100vh - 60px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 48px;
-  font-weight: bold;
+  padding: 24px;
 }
 </style>
