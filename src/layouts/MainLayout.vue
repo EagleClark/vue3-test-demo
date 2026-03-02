@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -10,6 +11,9 @@ const userStore = useUserStore()
 
 // 当前激活的菜单
 const activeMenu = computed(() => route.path)
+
+// 修改密码弹窗
+const changePasswordVisible = ref(false)
 
 // 退出登录
 async function handleLogout() {
@@ -55,6 +59,9 @@ async function handleLogout() {
       </div>
       <div class="header-right">
         <span class="username">{{ userStore.username }}</span>
+        <el-button size="small" @click="changePasswordVisible = true">
+          修改密码
+        </el-button>
         <el-button type="danger" size="small" @click="handleLogout">
           退出登录
         </el-button>
@@ -65,6 +72,9 @@ async function handleLogout() {
     <main class="main-content">
       <slot></slot>
     </main>
+
+    <!-- 修改密码弹窗 -->
+    <ChangePasswordDialog v-model:visible="changePasswordVisible" />
   </div>
 </template>
 

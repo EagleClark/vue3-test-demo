@@ -48,6 +48,21 @@ export const useUserStore = defineStore('user', () => {
     storage.clearAuth()
   }
 
+  // 修改密码（模拟验证）
+  async function changePassword(oldPassword: string, _newPassword: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // 模拟验证旧密码（实际项目中调用 API）
+        if (oldPassword === '123456') {
+          // 模拟修改成功
+          resolve(true)
+        } else {
+          resolve(false)
+        }
+      }, 300)
+    })
+  }
+
   // 初始化时从 localStorage 恢复状态
   function init(): void {
     const savedToken = storage.getToken()
@@ -69,6 +84,7 @@ export const useUserStore = defineStore('user', () => {
     // Actions
     login,
     logout,
+    changePassword,
     init
   }
 })
