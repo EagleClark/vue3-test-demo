@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserListStore } from '@/stores/userList'
 import { UserRole, UserRoleLabels } from '@/types/user'
@@ -8,6 +8,11 @@ import UserFormDialog from '@/components/UserFormDialog.vue'
 import type { UserListItem } from '@/types/user'
 
 const userListStore = useUserListStore()
+
+// 组件挂载时获取用户列表
+onMounted(() => {
+  userListStore.fetchUsers()
+})
 
 // 弹窗相关
 const dialogVisible = ref(false)
@@ -44,11 +49,11 @@ async function handleDelete(user: UserListItem) {
       }
     )
 
-    const success = userListStore.deleteUser(user.id)
+    const success = await userListStore.deleteUser(user.id)
     if (success) {
       ElMessage.success('删除成功')
     } else {
-      ElMessage.error('删除失败')
+      ElMessage.error(userListStore.error || '删除失败')
     }
   } catch {
     // 用户取消
@@ -82,7 +87,7 @@ function isSuperAdmin(user: UserListItem): boolean {
       </div>
 
       <!-- 用户列表 -->
-      <el-table :data="userListStore.users" stripe border>
+      <el-table :data="userListStore.users" stripe border v-loading="userListStore.loading">
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column label="角色" min-width="100">
           <template #default="{ row }">

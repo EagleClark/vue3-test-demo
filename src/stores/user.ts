@@ -2,11 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { UserInfo, LoginForm } from '@/types/user'
 import { storage } from '@/utils/storage'
+import { login as loginApi, changePassword as changePasswordApi } from '@/api'
 
 export const useUserStore = defineStore('user', () => {
   // State
   const token = ref<string | null>(storage.getToken())
   const userInfo = ref<UserInfo | null>(storage.getUser<UserInfo>())
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
   // Getters
   const isLoggedIn = computed(() => !!token.value)
@@ -14,32 +17,39 @@ export const useUserStore = defineStore('user', () => {
 
   // Actions
   async function login(form: LoginForm): Promise<boolean> {
-    // 模拟 API 调用（实际项目中替换为真实 API）
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 模拟验证
-        if (form.username === 'admin' && form.password === '123456') {
-          const user: UserInfo = {
-            id: 1,
-            username: form.username,
-            nickname: '管理员',
-            token: 'mock-jwt-token-' + Date.now()
-          }
+    loading.value = true
+    error.value = null
 
-          // 更新 state
-          token.value = user.token
-          userInfo.value = user
+    try {
+      const response = await loginApi({
+        username: form.username,
+        password: form.password
+      })
 
-          // 持久化存储
-          storage.setToken(user.token)
-          storage.setUser(user)
-
-          resolve(true)
-        } else {
-          resolve(false)
+      if (response.success && response.data) {
+        const user: UserInfo = {
+          id: response.data.id,
+          username: response.data.username,
+          nickname: response.data.nickname,
+          token: response.data.token
         }
-      }, 500)
-    })
+
+        token.value = user.token
+        userInfo.value = user
+        storage.setToken(user.token)
+        storage.setUser(user)
+
+        return true
+      }
+
+      error.value = response.message
+      return false
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '登录失败'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
   function logout(): void {
@@ -48,22 +58,29 @@ export const useUserStore = defineStore('user', () => {
     storage.clearAuth()
   }
 
-  // 修改密码（模拟验证）
-  async function changePassword(oldPassword: string, _newPassword: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 模拟验证旧密码（实际项目中调用 API）
-        if (oldPassword === '123456') {
-          // 模拟修改成功
-          resolve(true)
-        } else {
-          resolve(false)
-        }
-      }, 300)
-    })
+  async function changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await changePasswordApi({
+        oldPassword,
+        newPassword
+      })
+
+      if (!response.success) {
+        error.value = response.message
+      }
+
+      return response.success
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '修改密码失败'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
-  // 初始化时从 localStorage 恢复状态
   function init(): void {
     const savedToken = storage.getToken()
     const savedUser = storage.getUser<UserInfo>()
@@ -78,6 +95,8 @@ export const useUserStore = defineStore('user', () => {
     // State
     token,
     userInfo,
+    loading,
+    error,
     // Getters
     isLoggedIn,
     username,

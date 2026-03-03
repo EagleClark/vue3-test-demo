@@ -2,89 +2,123 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { UserListItem, UserFormData } from '@/types/user'
 import { UserRole } from '@/types/user'
-
-// 模拟初始用户数据
-const initialUsers: UserListItem[] = [
-  {
-    id: 1,
-    username: 'admin',
-    role: UserRole.ADMIN,
-    createdAt: '2024-01-01 00:00:00'
-  },
-  {
-    id: 2,
-    username: 'user1',
-    role: UserRole.USER,
-    createdAt: '2024-01-15 10:30:00'
-  },
-  {
-    id: 3,
-    username: 'user2',
-    role: UserRole.USER,
-    createdAt: '2024-02-01 14:20:00'
-  }
-]
+import {
+  fetchUserList,
+  createUser,
+  updateUser as updateUserApi,
+  deleteUser as deleteUserApi
+} from '@/api'
 
 export const useUserListStore = defineStore('userList', () => {
   // State
-  const users = ref<UserListItem[]>([...initialUsers])
-  const nextId = ref(4)
+  const users = ref<UserListItem[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
   // Getters
   const userCount = computed(() => users.value.length)
 
   // Actions
+  async function fetchUsers(): Promise<void> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetchUserList()
+
+      if (response.success && response.data) {
+        users.value = response.data
+      } else {
+        error.value = response.message
+      }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '获取用户列表失败'
+    } finally {
+      loading.value = false
+    }
+  }
+
   function getUserById(id: number): UserListItem | undefined {
     return users.value.find(u => u.id === id)
   }
 
-  function addUser(data: Omit<UserFormData, 'id' | 'confirmPassword'>): UserListItem {
-    const newUser: UserListItem = {
-      id: nextId.value++,
-      username: data.username,
-      role: data.role,
-      createdAt: new Date().toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).replace(/\//g, '-')
+  async function addUser(data: Omit<UserFormData, 'id' | 'confirmPassword'>): Promise<UserListItem | null> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await createUser({
+        username: data.username,
+        password: data.password,
+        role: data.role
+      })
+
+      if (response.success && response.data) {
+        users.value.push(response.data)
+        return response.data
+      }
+
+      error.value = response.message
+      return null
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '创建用户失败'
+      return null
+    } finally {
+      loading.value = false
     }
-    users.value.push(newUser)
-    return newUser
   }
 
-  function updateUser(id: number, data: Partial<Omit<UserFormData, 'id' | 'password' | 'confirmPassword'>>): boolean {
-    const index = users.value.findIndex(u => u.id === id)
-    if (index === -1) return false
+  async function updateUser(id: number, data: Partial<Omit<UserFormData, 'id' | 'password' | 'confirmPassword'>>): Promise<boolean> {
+    loading.value = true
+    error.value = null
 
-    // 不能修改 admin 用户的角色
-    const currentUser = users.value[index]
-    if (currentUser!.username === 'admin' && data.role && data.role !== UserRole.ADMIN) {
+    try {
+      const response = await updateUserApi(id, {
+        username: data.username ?? '',
+        role: data.role ?? UserRole.USER
+      })
+
+      if (response.success && response.data) {
+        const index = users.value.findIndex(u => u.id === id)
+        if (index !== -1) {
+          users.value[index] = response.data
+        }
+        return true
+      }
+
+      error.value = response.message
       return false
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '更新用户失败'
+      return false
+    } finally {
+      loading.value = false
     }
-
-    users.value[index] = {
-      id: currentUser!.id,
-      username: data.username ?? currentUser!.username,
-      role: data.role ?? currentUser!.role,
-      createdAt: currentUser!.createdAt
-    }
-    return true
   }
 
-  function deleteUser(id: number): boolean {
-    const index = users.value.findIndex(u => u.id === id)
-    if (index === -1) return false
+  async function deleteUser(id: number): Promise<boolean> {
+    loading.value = true
+    error.value = null
 
-    // 不能删除 admin 用户
-    const currentUser = users.value[index]
-    if (currentUser!.username === 'admin') return false
+    try {
+      const response = await deleteUserApi(id)
 
-    users.value.splice(index, 1)
-    return true
+      if (response.success) {
+        const index = users.value.findIndex(u => u.id === id)
+        if (index !== -1) {
+          users.value.splice(index, 1)
+        }
+        return true
+      }
+
+      error.value = response.message
+      return false
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '删除用户失败'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
   function isSuperAdmin(id: number): boolean {
@@ -95,9 +129,12 @@ export const useUserListStore = defineStore('userList', () => {
   return {
     // State
     users,
+    loading,
+    error,
     // Getters
     userCount,
     // Actions
+    fetchUsers,
     getUserById,
     addUser,
     updateUser,

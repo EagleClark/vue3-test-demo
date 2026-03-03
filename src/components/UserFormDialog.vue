@@ -128,7 +128,7 @@ async function handleSubmit() {
     try {
       if (isEdit.value && props.user) {
         // 编辑用户
-        const success = userListStore.updateUser(props.user.id, {
+        const success = await userListStore.updateUser(props.user.id, {
           username: formData.username,
           role: formData.role
         })
@@ -137,18 +137,22 @@ async function handleSubmit() {
           emit('success')
           emit('update:visible', false)
         } else {
-          ElMessage.error('编辑失败')
+          ElMessage.error(userListStore.error || '编辑失败')
         }
       } else {
         // 新建用户
-        userListStore.addUser({
+        const newUser = await userListStore.addUser({
           username: formData.username,
           password: formData.password,
           role: formData.role
         })
-        ElMessage.success('创建成功')
-        emit('success')
-        emit('update:visible', false)
+        if (newUser) {
+          ElMessage.success('创建成功')
+          emit('success')
+          emit('update:visible', false)
+        } else {
+          ElMessage.error(userListStore.error || '创建失败')
+        }
       }
     } finally {
       loading.value = false
