@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:i": "vitest run tests/integration"
   },
   "dependencies": {
     "@vueuse/core": "^14.2.1",

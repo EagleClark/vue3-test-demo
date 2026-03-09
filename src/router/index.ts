@@ -2,7 +2,7 @@ import { createWebHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
 // 路由配置
-const routes: RouteRecordRaw[] = [
+export const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
