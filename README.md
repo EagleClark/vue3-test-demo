@@ -1,5 +1,5 @@
-# Vue 3 + TypeScript + Vite
+# VUE3-TEST-DEMO
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+该项目是一个VUE3的自动化测试的demo项目，主要用到 `Vue3`、`Element-plus`、`Vitest`、`Playwright` 等技术栈。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+该项目主要供我博客的文章 [Web自动化测试](https://eagle90.com/article/front-end/Web自动化测试/) 使用，代码均为 AI 生成。
